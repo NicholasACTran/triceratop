@@ -9,7 +9,7 @@ const command = Deno.args[0];
 
 switch (command) {
   case 'generate':
-    Generate();
+    await Generate();
     break;
   case 'test':
     console.log('Need to implement test functionality');
