@@ -4,6 +4,7 @@ import {
   existsSync,
   walkSync
 } from 'https://deno.land/std@0.74.0/fs/mod.ts';
+import { SEP } from 'https://deno.land/std@0.74.0/path/mod.ts';
 
 import { Parser } from './parser.ts';
 
@@ -22,8 +23,7 @@ export async function Generate() {
     //If not create one and write parsed feature file it
     const path = feature.path;
     if (path.endsWith('.feature')) {
-      //TODO: Figure out file separator for different systems
-      const file_name = path.substring(path.indexOf('\\'), path.lastIndexOf('.'));
+      const file_name = path.substring(path.indexOf(SEP), path.lastIndexOf('.'));
       const feature_file_name = FEATURE_DIRECTORY + file_name + '.feature';
       const step_file_name = STEPS_DIRECTORY + file_name + '.ts';
       if (!existsSync(step_file_name)) {
