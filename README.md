@@ -33,3 +33,16 @@ By running a triceratop CLI command, it would go through each .feature file and 
 ### Running Tests
 
 By running a triceratop CLI command, it should go through each .feature file (or a specific one) and use the .feature file to search for the specific step functions in the correlated .ts function and run a test using the underlying Deno test framework.
+
+### Things That Need to Be Done
+
+* Implement Background, And, But nodes
+* Implement Scenario Outlines, Examples nodes
+* Implement syntax list -> typescript
+* Connect functionality to underlying Deno test framework
+* Implement:
+  - Create function for Given
+  - Create function for When
+  - Create function for Then
+  - Create function for And
+  - Create function for But
