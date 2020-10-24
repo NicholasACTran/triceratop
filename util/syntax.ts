@@ -6,6 +6,7 @@ const WHEN : string = 'When:';
 const THEN : string = 'Then:';
 const BACKGROUND : string = 'Background';
 const AND : string = 'And';
+const BUT : string = 'But';
 
 export class SyntaxNode {
   type: String;
@@ -17,54 +18,54 @@ export class SyntaxNode {
   }
 }
 
-const ParseAndNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>, context: string) => {
-    let and_description = '';
+const ParseAndButNode =
+  (tokens: Array<string>, nodes: Array<SyntaxNode>, context: string, type: string) => {
+    let node_description = '';
     tokens.shift();
     while (true) {
       if (tokens.length === 0 || tokens[0] === '') {
         if (context === THEN) {
-          nodes.push(new SyntaxNode(AND, and_description));
+          nodes.push(new SyntaxNode(type, node_description));
           return;
         } else {
-          throw `EOF not expected after "And" under context ${context}`;
+          throw `EOF not expected after "${type}" under context ${context}`;
         }
       }
 
       if (tokens[0] === THEN) {
         if (context === WHEN) {
-          nodes.push(new SyntaxNode(AND, and_description));
+          nodes.push(new SyntaxNode(type, node_description));
           ParseThenNode(tokens, nodes);
           return;
         } else {
-          throw `Then not expected after "And" under context ${context}`;
+          throw `Then not expected after "${type}" under context ${context}`;
         }
       } else if (tokens[0] === WHEN) {
         if (context === GIVEN) {
-          nodes.push(new SyntaxNode(AND, and_description));
+          nodes.push(new SyntaxNode(type, node_description));
           ParseWhenNode(tokens, nodes);
           return;
         } else {
-          throw `When not expected after "And" under context ${context}`;
+          throw `When not expected after "${type}" under context ${context}`;
         }
       } else if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
         if (context === THEN) {
-          nodes.push(new SyntaxNode(AND, and_description));
+          nodes.push(new SyntaxNode(type, node_description));
           ParseScenarioExampleNode(tokens, nodes, tokens[0]);
           return;
         } else {
-          throw `${tokens[0]} not expected after "AND" under context ${context}`;
+          throw `${tokens[0]} not expected after "${type}" under context ${context}`;
         }
-      } else if (tokens[0] === AND) {
-        nodes.push(new SyntaxNode(AND, and_description));
-        ParseAndNode(tokens, nodes, context);
+      } else if (tokens[0] === AND || tokens[0] === BUT) {
+        nodes.push(new SyntaxNode(type, node_description));
+        ParseAndButNode(tokens, nodes, context, tokens[0]);
         return;
       }
 
-      and_description = (and_description === '') ? `${tokens.shift()}`
-                              : `${and_description} ${tokens.shift()}`;
+      node_description = (node_description === '') ? `${tokens.shift()}`
+                              : `${node_description} ${tokens.shift()}`;
     }
-  }
+  };
 
 const ParseThenNode =
   (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
@@ -75,9 +76,9 @@ const ParseThenNode =
         nodes.push(new SyntaxNode(THEN, then_description));
         return;
       }
-      else if (tokens[0] === AND) {
+      else if (tokens[0] === AND || tokens[0] === BUT) {
         nodes.push(new SyntaxNode(THEN, then_description));
-        ParseAndNode(tokens, nodes, THEN);
+        ParseAndButNode(tokens, nodes, THEN, tokens[0]);
         return;
       } else if (tokens[0] === THEN) {
         nodes.push(new SyntaxNode(THEN, then_description));
@@ -103,9 +104,9 @@ const ParseWhenNode =
         nodes.push(new SyntaxNode(WHEN, when_description));
         ParseWhenNode(tokens, nodes);
         return;
-      } else if (tokens[0] === AND) {
+      } else if (tokens[0] === AND || tokens[0] === BUT) {
         nodes.push(new SyntaxNode(WHEN, when_description));
-        ParseAndNode(tokens, nodes, WHEN);
+        ParseAndButNode(tokens, nodes, WHEN, tokens[0]);
         return;
       } else if (tokens[0] === THEN) {
         nodes.push(new SyntaxNode(WHEN, when_description));
@@ -129,9 +130,9 @@ const ParseGivenNode =
         nodes.push(new SyntaxNode(GIVEN, given_description));
         ParseGivenNode(tokens, nodes);
         return;
-      } else if (tokens[0] === AND){
+      } else if (tokens[0] === AND || tokens[0] === BUT){
         nodes.push(new SyntaxNode(GIVEN, given_description));
-        ParseAndNode(tokens, nodes, GIVEN);
+        ParseAndButNode(tokens, nodes, GIVEN, tokens[0]);
         return;
       } else if (tokens[0] === WHEN) {
         nodes.push(new SyntaxNode(GIVEN, given_description));
