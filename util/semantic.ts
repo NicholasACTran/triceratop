@@ -1,20 +1,11 @@
 import { SyntaxNode } from './syntax.ts';
 
-//TODO: Implement semantics
 export function CreateSemanticText(nodes : Array<SyntaxNode>) : string {
   let text = '';
+  const nodeTypes = ['Given', 'When', 'Then', 'And', 'But'];
   for (const node of nodes) {
-    switch(node.type) {
-      case 'Feature':
-        break;
-      case 'Scenario':
-        break;
-      case 'Example':
-        break;
-      case 'When':
-        break;
-      case 'Then':
-        break;
+    if (nodeTypes.includes(node.type)) {
+      text = text + `${node.type}('${node.text}', () => {\n\n});\n\n`;
     }
   }
   return text;

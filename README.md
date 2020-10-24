@@ -38,7 +38,7 @@ By running a triceratop CLI command, it should go through each .feature file (or
 
 - [x] Implement Background, And, But nodes
 - [ ] Implement Scenario Outlines, Examples nodes
-- [ ] Implement syntax list -> typescript
+- [x] Implement syntax list -> typescript
 - [ ] Connect functionality to underlying Deno test framework
 - [ ] Implement:
   - [ ] Create function for Given

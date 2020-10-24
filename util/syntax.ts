@@ -9,8 +9,8 @@ const AND : string = 'And';
 const BUT : string = 'But';
 
 export class SyntaxNode {
-  type: String;
-  text: String;
+  type: string;
+  text: string;
 
   constructor(type: string, text: string) {
     this.type = type;
