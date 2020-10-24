@@ -4,6 +4,7 @@ const EXAMPLE : string = 'Example:';
 const GIVEN : string = 'Given:';
 const WHEN : string = 'When:';
 const THEN : string = 'Then:';
+const BACKGROUND : string = 'Background';
 
 export class SyntaxNode {
   type: String;
@@ -81,6 +82,21 @@ const ParseGivenNode =
     }
   }
 
+const ParseBackgroundGivenNode = (tokens: Array<string>) : SyntaxNode => {
+    let given_description = '';
+    tokens.shift();
+    while (true) {
+      if (tokens[0] === GIVEN || tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
+        return (new SyntaxNode(GIVEN, given_description));
+      } else if (tokens[0] === ''){
+        throw 'Expected "Given" after "Given"';
+      }
+
+      given_description = (given_description === '') ? `${tokens.shift()}`
+                              : `${given_description} ${tokens.shift()}`;
+    }
+  };
+
 const ParseScenarioExampleNode =
   (tokens: Array<string>, nodes: Array<SyntaxNode>, type: string) => {
     if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
@@ -107,12 +123,32 @@ const ParseScenarioExampleNode =
     }
   };
 
+const ParseBackgroundNode =
+  (tokens: Array<string>, nodes: Array<SyntaxNode>) : Array<SyntaxNode> => {
+    tokens.shift();
+    nodes.push(new SyntaxNode(BACKGROUND, ''));
+    if (tokens[0] !== GIVEN) {
+      throw 'Expected "Given" after "Background"'
+    }
+    while (tokens[0] !== SCENARIO && tokens[0] !== EXAMPLE) {
+      if (tokens[0] === '') {
+        throw 'Expected "Scenario" or "Example" after "GIVEN"';
+      }
+
+      nodes.push(ParseBackgroundGivenNode(tokens));
+    }
+    ParseScenarioExampleNode(tokens, nodes, tokens[0]);
+    return nodes;
+  };
+
 const ParseFeatureNode =
   (tokens: Array<string>, nodes: Array<SyntaxNode>) : Array<SyntaxNode> => {
     if (tokens[0] === FEATURE) {
       let feature_description = '';
       tokens.shift();
-      while (tokens[0] !== SCENARIO && tokens[0] !== EXAMPLE) {
+      while (tokens[0] !== SCENARIO
+              && tokens[0] !== EXAMPLE
+              && tokens[0] !== BACKGROUND) {
         if (tokens[0] === '') {
           throw 'Expected "Scenario" or "Example" after "Feature"';
         }
@@ -121,7 +157,11 @@ const ParseFeatureNode =
                                 : `${feature_description} ${tokens.shift()}`;
       }
       nodes.push(new SyntaxNode(FEATURE, feature_description));
-      ParseScenarioExampleNode(tokens, nodes, tokens[0]);
+      if (tokens[0] === BACKGROUND) {
+        ParseBackgroundNode(tokens, nodes);
+      } else {
+        ParseScenarioExampleNode(tokens, nodes, tokens[0]);
+      }
     } else {
       throw 'Feature file must start with "Feature:"';
     }
