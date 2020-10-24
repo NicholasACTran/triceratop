@@ -1,10 +1,10 @@
 const FEATURE : string = 'Feature:';
 const SCENARIO : string = 'Scenario:';
 const EXAMPLE : string = 'Example:';
-const GIVEN : string = 'Given:';
-const WHEN : string = 'When:';
-const THEN : string = 'Then:';
-const BACKGROUND : string = 'Background';
+const GIVEN : string = 'Given';
+const WHEN : string = 'When';
+const THEN : string = 'Then';
+const BACKGROUND : string = 'Background:';
 const AND : string = 'And';
 const BUT : string = 'But';
 
@@ -147,15 +147,18 @@ const ParseGivenNode =
     }
   };
 
-const ParseBackgroundGivenNode = (tokens: Array<string>) : SyntaxNode => {
+const ParseBackgroundGivenNode =
+  (tokens: Array<string>, nodes: Array<SyntaxNode>, type: string) => {
     let given_description = '';
     tokens.shift();
     while (true) {
-      if (tokens[0] === GIVEN
-        || tokens[0] === AND
-        || tokens[0] === SCENARIO
-        || tokens[0] === EXAMPLE) {
-        return (new SyntaxNode(GIVEN, given_description));
+      if (tokens[0] === GIVEN || tokens[0] === AND) {
+        nodes.push(new SyntaxNode(type, given_description));
+        ParseBackgroundGivenNode(tokens, nodes, tokens[0]);
+        return;
+      } else if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
+        nodes.push(new SyntaxNode(type, given_description));
+        return;
       } else if (tokens[0] === ''){
         throw 'Expected "Given" after "Given"';
       }
@@ -191,7 +194,6 @@ const ParseScenarioExampleNode =
     }
   };
 
-// TODO: Rework to implement AND and BUT nodes in Background
 const ParseBackgroundNode =
   (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
     tokens.shift();
@@ -199,13 +201,7 @@ const ParseBackgroundNode =
     if (tokens[0] !== GIVEN) {
       throw 'Expected "Given" after "Background"'
     }
-    while (tokens[0] !== SCENARIO && tokens[0] !== EXAMPLE) {
-      if (tokens[0] === '') {
-        throw 'Expected "Scenario" or "Example" after "GIVEN"';
-      }
-
-      nodes.push(ParseBackgroundGivenNode(tokens));
-    }
+    ParseBackgroundGivenNode(tokens, nodes, GIVEN);
     ParseScenarioExampleNode(tokens, nodes, tokens[0]);
   };
 
