@@ -1,3 +1,5 @@
+import { readLine } from './readline.ts';
+
 const FEATURE : string = 'Feature:';
 const SCENARIO : string = 'Scenario:';
 const EXAMPLE : string = 'Example:';
@@ -7,235 +9,135 @@ const THEN : string = 'Then';
 const BACKGROUND : string = 'Background:';
 const AND : string = 'And';
 const BUT : string = 'But';
+const OUTLINE : string = 'Outline';
+const SCENARIO_OUTLINE : string = 'Scenario Outline:';
+
+const headers = [
+  FEATURE,
+  BACKGROUND,
+  SCENARIO,
+  EXAMPLE,
+  SCENARIO_OUTLINE
+]
 
 export class SyntaxNode {
   type: string;
   text: string;
 
-  constructor(type: string, text: string) {
+  constructor(type: string, text='') {
     this.type = type;
     this.text = text;
   }
 }
 
-const ParseAndButNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>, context: string, type: string) => {
-    let node_description = '';
-    tokens.shift();
-    while (true) {
-      if (tokens.length === 0 || tokens[0] === '') {
-        if (context === THEN) {
-          nodes.push(new SyntaxNode(type, node_description));
-          return;
-        } else {
-          throw `EOF not expected after "${type}" under context ${context}`;
-        }
-      }
+/**
+^ Parses lines that will generate functions (Given, When, Then, And, But)
+*
+* @param line line to parse
+* @param type type of node
+*/
 
-      if (tokens[0] === THEN) {
-        if (context === WHEN) {
-          nodes.push(new SyntaxNode(type, node_description));
-          ParseThenNode(tokens, nodes);
-          return;
-        } else {
-          throw `Then not expected after "${type}" under context ${context}`;
-        }
-      } else if (tokens[0] === WHEN) {
-        if (context === GIVEN) {
-          nodes.push(new SyntaxNode(type, node_description));
-          ParseWhenNode(tokens, nodes);
-          return;
-        } else {
-          throw `When not expected after "${type}" under context ${context}`;
-        }
-      } else if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
-        if (context === THEN) {
-          nodes.push(new SyntaxNode(type, node_description));
-          ParseScenarioExampleNode(tokens, nodes, tokens[0]);
-          return;
-        } else {
-          throw `${tokens[0]} not expected after "${type}" under context ${context}`;
-        }
-      } else if (tokens[0] === AND || tokens[0] === BUT) {
-        nodes.push(new SyntaxNode(type, node_description));
-        ParseAndButNode(tokens, nodes, context, tokens[0]);
-        return;
-      }
+const ParseFunctionNode = (line: string, type: string) : SyntaxNode => {
+ return new SyntaxNode(type, line.substring(line.indexOf(' ')));
+};
 
-      node_description = (node_description === '') ? `${tokens.shift()}`
-                              : `${node_description} ${tokens.shift()}`;
-    }
-  };
+/**
+* Parses lines that are defined as a header (Feature, Scenario, Example Scenario Outline)
+*
+* @param line line to parse
+* @param type type of node
+*/
+const ParseHeaderNode = (line: string, type: string) : SyntaxNode => {
+  return new SyntaxNode(type, line.substring(line.indexOf(' ')));
+};
 
-const ParseThenNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
-    let then_description = '';
-    tokens.shift();
-    while (true) {
-      if (tokens.length === 0 || tokens[0] === '') {
-        nodes.push(new SyntaxNode(THEN, then_description));
-        return;
-      }
-      else if (tokens[0] === AND || tokens[0] === BUT) {
-        nodes.push(new SyntaxNode(THEN, then_description));
-        ParseAndButNode(tokens, nodes, THEN, tokens[0]);
-        return;
-      } else if (tokens[0] === THEN) {
-        nodes.push(new SyntaxNode(THEN, then_description));
-        ParseThenNode(tokens, nodes);
-        return;
-      } else if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
-        nodes.push(new SyntaxNode(THEN, then_description));
-        ParseScenarioExampleNode(tokens, nodes, tokens[0]);
-        return;
-      }
+/**
+* Given a feature file name, return a list of Syntax nodes that represent the
+* feature file. Following typical Gherkin rules
+* TODO: Add context checking at the parsing level
 
-      then_description = (then_description === '') ? `${tokens.shift()}`
-                              : `${then_description} ${tokens.shift()}`;
-    }
-  };
-
-const ParseWhenNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
-    let when_description = '';
-    tokens.shift();
-    while (true) {
-      if (tokens[0] === WHEN) {
-        nodes.push(new SyntaxNode(WHEN, when_description));
-        ParseWhenNode(tokens, nodes);
-        return;
-      } else if (tokens[0] === AND || tokens[0] === BUT) {
-        nodes.push(new SyntaxNode(WHEN, when_description));
-        ParseAndButNode(tokens, nodes, WHEN, tokens[0]);
-        return;
-      } else if (tokens[0] === THEN) {
-        nodes.push(new SyntaxNode(WHEN, when_description));
-        ParseThenNode(tokens, nodes);
-        return;
-      } else if (tokens[0] === '') {
-        throw 'Expected "When" or "Then" after "When"';
-      }
-
-      when_description = (when_description === '') ? `${tokens.shift()}`
-                              : `${when_description} ${tokens.shift()}`;
-    }
-  };
-
-const ParseGivenNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
-    let given_description = '';
-    tokens.shift();
-    while (true) {
-      if (tokens[0] === GIVEN) {
-        nodes.push(new SyntaxNode(GIVEN, given_description));
-        ParseGivenNode(tokens, nodes);
-        return;
-      } else if (tokens[0] === AND || tokens[0] === BUT){
-        nodes.push(new SyntaxNode(GIVEN, given_description));
-        ParseAndButNode(tokens, nodes, GIVEN, tokens[0]);
-        return;
-      } else if (tokens[0] === WHEN) {
-        nodes.push(new SyntaxNode(GIVEN, given_description));
-        ParseWhenNode(tokens, nodes);
-        return;
-      } else if (tokens[0] === ''){
-        throw 'Expected "Given" or "When" after "Given"';
-      }
-
-      given_description = (given_description === '') ? `${tokens.shift()}`
-                              : `${given_description} ${tokens.shift()}`;
-    }
-  };
-
-const ParseBackgroundGivenNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>, type: string) => {
-    let given_description = '';
-    tokens.shift();
-    while (true) {
-      if (tokens[0] === GIVEN || tokens[0] === AND) {
-        nodes.push(new SyntaxNode(type, given_description));
-        ParseBackgroundGivenNode(tokens, nodes, tokens[0]);
-        return;
-      } else if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
-        nodes.push(new SyntaxNode(type, given_description));
-        return;
-      } else if (tokens[0] === ''){
-        throw 'Expected "Given" after "Given"';
-      }
-
-      given_description = (given_description === '') ? `${tokens.shift()}`
-                              : `${given_description} ${tokens.shift()}`;
-    }
-  };
-
-const ParseScenarioExampleNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>, type: string) => {
-    if (tokens[0] === SCENARIO || tokens[0] === EXAMPLE) {
-      let scenarion_description = '';
-      tokens.shift();
-      while (true) {
-        if (tokens[0] === GIVEN) {
-          nodes.push(new SyntaxNode(type, scenarion_description));
-          ParseGivenNode(tokens, nodes);
-          return;
-        } else if (tokens[0] === WHEN) {
-          nodes.push(new SyntaxNode(type, scenarion_description));
-          ParseWhenNode(tokens, nodes);
-          return;
-        } else if (tokens[0] === '') {
-          throw `Expected "Given" or "When" after "${type}"`;
-        }
-
-        scenarion_description = (scenarion_description === '') ? `${tokens.shift()}`
-                                : `${scenarion_description} ${tokens.shift()}`;
-      }
-    } else {
-      throw 'Expected "Scenario" after "Feature"';
-    }
-  };
-
-const ParseBackgroundNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>) => {
-    tokens.shift();
-    nodes.push(new SyntaxNode(BACKGROUND, ''));
-    if (tokens[0] !== GIVEN) {
-      throw 'Expected "Given" after "Background"'
-    }
-    ParseBackgroundGivenNode(tokens, nodes, GIVEN);
-    ParseScenarioExampleNode(tokens, nodes, tokens[0]);
-  };
-
-const ParseFeatureNode =
-  (tokens: Array<string>, nodes: Array<SyntaxNode>) : Array<SyntaxNode> => {
-    if (tokens[0] === FEATURE) {
-      let feature_description = '';
-      tokens.shift();
-      while (tokens[0] !== SCENARIO
-              && tokens[0] !== EXAMPLE
-              && tokens[0] !== BACKGROUND) {
-        if (tokens[0] === '') {
-          throw 'Expected "Scenario" or "Example" after "Feature"';
-        }
-
-        feature_description = (feature_description === '') ? `${tokens.shift()}`
-                                : `${feature_description} ${tokens.shift()}`;
-      }
-      nodes.push(new SyntaxNode(FEATURE, feature_description));
-      if (tokens[0] === BACKGROUND) {
-        ParseBackgroundNode(tokens, nodes);
-      } else {
-        ParseScenarioExampleNode(tokens, nodes, tokens[0]);
-      }
-    } else {
-      throw 'Feature file must start with "Feature:"';
-    }
-    return nodes;
-  };
-
-export function GenerateSyntaxList(text: string): Array<SyntaxNode> {
-  const tokens = text.split(/\s+/);
+* @param feature_file the path to the feature file to parse
+*/
+export async function GenerateSyntaxList(feature_file: string): Promise<Array<SyntaxNode>> {
   const nodes : Array<SyntaxNode>  = [];
+  // Context tuplet that tracks the previous relevent node
+  // Index 0: The most recent header node
+  // Index 1: The most recent, relevant function node (Given, When, Then)
+  let context: [string, string] = ['', ''];
+  for await (const line of readLine(feature_file)) {
+    console.log(line);
+    switch(line.split(' ')[0]) {
+      case FEATURE:
+        if (context[0] === '') {
+            nodes.push(ParseHeaderNode(line, FEATURE));
+            context[0] = FEATURE;
+        } else throw 'Only 1 Feature per .feature file';
+        break;
+      case BACKGROUND:
+        if (context[0] === FEATURE) {
+            nodes.push(new SyntaxNode(BACKGROUND));
+            context[0] = BACKGROUND;
+        } else throw '"Background" expected to follow "Feature"';
+        break;
+      case SCENARIO:
+        if ([FEATURE, BACKGROUND].includes(context[0]) ||
+            (headers.includes(context[0]) &&
+              (context[1] === THEN || context[1] === ''))) {
+            nodes.push(ParseHeaderNode(line, SCENARIO));
+            console.log(`context pre: ${context}`);
+            context[0] = SCENARIO;
+            context[1] = '';
+            console.log(`context post: ${context}`);
+        } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
+        break;
+      case EXAMPLE:
+        if ([FEATURE, BACKGROUND].includes(context[0]) ||
+            (headers.includes(context[0]) &&
+              (context[1] === THEN || context[1] === ''))) {
+            nodes.push(ParseHeaderNode(line, EXAMPLE));
+            console.log(`context pre: ${context}`);
+            context[0] = EXAMPLE;
+            context[1] = '';
+            console.log(`context post: ${context}`);
+        } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
+        break;
+      case GIVEN:
+        if (context[0] === BACKGROUND ||
+            ([SCENARIO, SCENARIO_OUTLINE, EXAMPLE].includes(context[0]) &&
+              [GIVEN, ''].includes(context[1]))) {
+            nodes.push(ParseFunctionNode(line, GIVEN));
+            context[1] = GIVEN;
+          } else throw '"Given" expected to follow "Given", "Background", "Scenario"';
+        break;
+      case WHEN:
+        console.log(context);
+        if ([SCENARIO, SCENARIO_OUTLINE, EXAMPLE].includes(context[0]) &&
+            [GIVEN, WHEN].includes(context[1])) {
+              nodes.push(ParseFunctionNode(line, WHEN));
+              context[1] = WHEN;
+            } else throw '"When" expected to follow "Given", "Scenario"';
+        break;
+      case THEN:
+        if ([SCENARIO, SCENARIO_OUTLINE, EXAMPLE].includes(context[0]) &&
+            [THEN, WHEN].includes(context[1])) {
+              nodes.push(ParseFunctionNode(line, THEN));
+              context[1] = THEN;
+            } else throw '"Then" expected to follow "Given", "Scenario"';
+        break;
+      case AND:
+        if ([GIVEN, WHEN, THEN].includes(context[1])) {
+          nodes.push(ParseFunctionNode(line, AND));
+        } else throw '"And" expected to follow "Given", "When", "Then"';
+        break;
+      case BUT:
+        if ([GIVEN, WHEN, THEN].includes(context[1])) {
+          nodes.push(ParseFunctionNode(line, BUT));
+        } else throw '"But" expected to follow "Given", "When", "Then"';
+        break;
+      default:
+        break;
+    }
+  }
 
-  ParseFeatureNode(tokens, nodes);
-  return nodes;
+  return Promise.resolve(nodes);
 }
