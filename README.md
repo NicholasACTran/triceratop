@@ -30,9 +30,19 @@ Where each .feature file in the features folder correlates directly with a .ts f
 
 By running a triceratop CLI command, it would go through each .feature file and generate a .ts file with the same name, containing the functions that encapsulate the steps in the .feature file.
 
+Example (WIP):
+```bash
+deno run --unstable --allow-read --allow-write triceratop.ts generate
+```
+
 ### Running Tests
 
 By running a triceratop CLI command, it should go through each .feature file (or a specific one) and use the .feature file to search for the specific step functions in the correlated .ts function and run a test using the underlying Deno test framework.
+
+Example (WIP):
+```bash
+deno test steps/*
+```
 
 ### Things That Need to Be Done
 
