@@ -12,6 +12,6 @@ switch (command) {
     await Generate();
     break;
   case 'test':
-    console.log('Need to implement test functionality');
+    console.log('TBD: use `deno test` instead of this?');
     break;
 }
