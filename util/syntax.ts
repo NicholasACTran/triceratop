@@ -65,7 +65,6 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
   // Index 1: The most recent, relevant function node (Given, When, Then)
   let context: [string, string] = ['', ''];
   for await (const line of readLine(feature_file)) {
-    console.log(line);
     switch(line.split(' ')[0]) {
       case FEATURE:
         if (context[0] === '') {
@@ -84,10 +83,8 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
             (headers.includes(context[0]) &&
               (context[1] === THEN || context[1] === ''))) {
             nodes.push(ParseHeaderNode(line, SCENARIO));
-            console.log(`context pre: ${context}`);
             context[0] = SCENARIO;
             context[1] = '';
-            console.log(`context post: ${context}`);
         } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
         break;
       case EXAMPLE:
@@ -95,10 +92,8 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
             (headers.includes(context[0]) &&
               (context[1] === THEN || context[1] === ''))) {
             nodes.push(ParseHeaderNode(line, EXAMPLE));
-            console.log(`context pre: ${context}`);
             context[0] = EXAMPLE;
             context[1] = '';
-            console.log(`context post: ${context}`);
         } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
         break;
       case GIVEN:
@@ -110,7 +105,6 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
           } else throw '"Given" expected to follow "Given", "Background", "Scenario"';
         break;
       case WHEN:
-        console.log(context);
         if ([SCENARIO, SCENARIO_OUTLINE, EXAMPLE].includes(context[0]) &&
             [GIVEN, WHEN].includes(context[1])) {
               nodes.push(ParseFunctionNode(line, WHEN));
