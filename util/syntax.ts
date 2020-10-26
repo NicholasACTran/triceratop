@@ -9,7 +9,8 @@ const THEN : string = 'Then';
 const BACKGROUND : string = 'Background:';
 const AND : string = 'And';
 const BUT : string = 'But';
-const OUTLINE : string = 'Outline';
+const SCENARIO_OUTLINE_1 : string = 'Scenario';
+const SCENARIO_OUTLINE_2 : string = 'Outline';
 const SCENARIO_OUTLINE : string = 'Scenario Outline:';
 
 const headers = [
@@ -23,10 +24,12 @@ const headers = [
 export class SyntaxNode {
   type: string;
   text: string;
+  variables: string[];
 
-  constructor(type: string, text='') {
+  constructor(type: string, text='', variables?:string[]) {
     this.type = type;
     this.text = text;
+    this.variables = variables ? variables : [];
   }
 }
 
@@ -38,7 +41,18 @@ export class SyntaxNode {
 */
 
 const ParseFunctionNode = (line: string, type: string) : SyntaxNode => {
- return new SyntaxNode(type, line.substring(line.indexOf(' ')));
+  const tokens = line.split(' ');
+  const variables : Array<string> = [];
+  let function_text = '';
+  tokens.shift();
+  while (tokens.length) {
+    const token = tokens.shift()!;
+    if (token.startsWith('<') && token.endsWith('>')) {
+      variables.push(token.substring(1, token.length-1));
+    }
+    function_text = (function_text === '') ? token : `${function_text} ${token}`;
+  }
+  return new SyntaxNode(type, function_text, variables);
 };
 
 /**
@@ -48,7 +62,7 @@ const ParseFunctionNode = (line: string, type: string) : SyntaxNode => {
 * @param type type of node
 */
 const ParseHeaderNode = (line: string, type: string) : SyntaxNode => {
-  return new SyntaxNode(type, line.substring(line.indexOf(' ')));
+  return new SyntaxNode(type, line.substring(line.indexOf(':') + 2));
 };
 
 /**
@@ -64,7 +78,11 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
   // Index 0: The most recent header node
   // Index 1: The most recent, relevant function node (Given, When, Then)
   let context: [string, string] = ['', ''];
-  for await (const line of readLine(feature_file)) {
+  for await (let line of readLine(feature_file)) {
+    line = line.replace(/\t/g, '');
+    while (line[0] === ' ') {
+      line = line.substring(1);
+    }
     switch(line.split(' ')[0]) {
       case FEATURE:
         if (context[0] === '') {
@@ -84,6 +102,15 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
               (context[1] === THEN || context[1] === ''))) {
             nodes.push(ParseHeaderNode(line, SCENARIO));
             context[0] = SCENARIO;
+            context[1] = '';
+        } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
+        break;
+      case SCENARIO_OUTLINE_1:
+        if ([FEATURE, BACKGROUND].includes(context[0]) ||
+            (headers.includes(context[0]) &&
+              (context[1] === THEN || context[1] === ''))) {
+            nodes.push(ParseHeaderNode(line, SCENARIO_OUTLINE));
+            context[0] = SCENARIO_OUTLINE;
             context[1] = '';
         } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
         break;
