@@ -7,6 +7,11 @@ import {
 import { SEP } from 'https://deno.land/std@0.74.0/path/mod.ts';
 
 import { Parser } from './parser.ts';
+import {
+  GenerationResult,
+  printGenerationResults,
+  GenerationStatus,
+} from './printer.ts';
 
 //TODO: Pull this from yml config file?
 const FEATURE_DIRECTORY = './features';
@@ -16,6 +21,8 @@ export async function Generate() {
   // Creates feature and steps folder if they don't exist
   ensureDirSync(FEATURE_DIRECTORY);
   ensureDirSync(STEPS_DIRECTORY);
+
+  const generationResults: GenerationResult[] = [];
 
   //For each .feature file in the feature folder
   //Check if a corresponding steps folder exists
@@ -30,7 +37,18 @@ export async function Generate() {
         ensureFileSync(step_file_name);
         const text = await Parser(feature_file_name);
         await Deno.writeTextFile(step_file_name, text);
+        generationResults.push({
+          identifier: step_file_name,
+          status: GenerationStatus.GENERATED
+        });
+      } else {
+        generationResults.push({
+          identifier: feature_file_name,
+          status: GenerationStatus.SKIPPED
+        });
       }
     }
   }
+
+  printGenerationResults(generationResults);
 }
