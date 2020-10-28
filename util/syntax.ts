@@ -13,27 +13,61 @@ const BUT : string = 'But';
 const SCENARIO_OUTLINE_1 : string = 'Scenario';
 const SCENARIO_OUTLINE_2 : string = 'Outline';
 const SCENARIO_OUTLINE : string = 'Scenario Outline:';
+const RULE : string = 'Rule:';
+const DOCSTRING : string = '"""';
 
 const headers = [
   FEATURE,
   BACKGROUND,
   SCENARIO,
   EXAMPLE,
-  SCENARIO_OUTLINE
+  SCENARIO_OUTLINE,
+  RULE
 ]
 
+/**
+* SyntaxNode class
+* @required type The type of node (Feature, Scenario, Given, When, Then, etc.)
+* @required text The semantic text of the node
+* @optional variables An array with the variable names relevant to the node
+* @optional exampleMap An array of objects that have the dynamic examples from a data table
+*/
 export class SyntaxNode {
   type: string;
   text: string;
   variables: string[];
   exampleMap: any[];
+  docString: string;
+  dataTable: any[];
 
   constructor(type: string, text='', variables?:string[], exampleMap?:any[]) {
     this.type = type;
     this.text = text;
     this.variables = variables ? variables : [];
     this.exampleMap = exampleMap ? exampleMap : [];
+    this.docString = '';
+    this.dataTable = [];
   }
+
+  addDynamicData(text?:string, dataTable?:any[]) {
+    this.docString = text ? text : '';
+    this.dataTable = dataTable ? dataTable : [];
+  }
+}
+
+const ParseDocString = async (generator : AsyncGenerator<string>, node: SyntaxNode) => {
+  let docString = '';
+  let g = await generator.next();
+  while (RemovePadding(g.value) !== DOCSTRING) {
+    if (g.done) {
+      throw 'Expected closing quoatoations for Doc String';
+    }
+    docString = docString + g.value;
+    g = await generator.next();
+  }
+
+  node.addDynamicData(docString);
+  return;
 }
 
 /**
@@ -129,9 +163,9 @@ const RemovePadding = (line: string) : string => {
 /**
 * Given a feature file name, return a list of Syntax nodes that represent the
 * feature file. Following typical Gherkin rules
-* TODO: Add context checking at the parsing level
-
+*
 * @param feature_file the path to the feature file to parse
+* @return a Promise of an array of Syntax Nodes
 */
 export async function GenerateSyntaxList(feature_file: string): Promise<Array<SyntaxNode>> {
   const nodes : Array<SyntaxNode>  = [];
@@ -177,6 +211,10 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
             context[0] = SCENARIO_OUTLINE;
             context[1] = '';
         } else throw '"SCENARIO" expected to follow "Feature", "Background", or "Then"';
+        break;
+      case RULE:
+        //TODO: Add context checking for Rule?
+        nodes.push(ParseHeaderNode(line, RULE));
         break;
       case EXAMPLE:
         if ([FEATURE, BACKGROUND].includes(context[0]) ||
@@ -226,6 +264,9 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
         if ([GIVEN, WHEN, THEN].includes(context[1])) {
           nodes.push(ParseFunctionNode(line, BUT));
         } else throw '"But" expected to follow "Given", "When", "Then"';
+        break;
+      case DOCSTRING:
+        await ParseDocString(lines, nodes[nodes.length - 1]);
         break;
       default:
         break;
