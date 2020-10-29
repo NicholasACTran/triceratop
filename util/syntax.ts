@@ -55,6 +55,65 @@ export class SyntaxNode {
   }
 }
 
+/**
+^ Parses DataTable and adds it to the relevant syntax node.
+* Will also parse the next node and add it into the syntax node array, adjusting
+* the context as need be.
+*
+* @param generator the generator to grab the next lines until table is finished
+* @param nodes the list of syntax nodes
+* @param context the current context of the parsing
+* @param header the header line of the data table
+* @return Promise of the new context of the parsing
+*/
+const ParseDataTable = async (generator : AsyncGenerator<string>,
+                              nodes: Array<SyntaxNode>,
+                              context: [string, string],
+                              header: string) : Promise<[string, string]> => {
+    const dataTable : Array<any> = [];
+    const headerVars : Array<string> = [];
+    const newContext = context;
+    const headerSplit = RemovePadding(header).replace(/\|/g, '').split(' ');
+
+    for (const h of headerSplit) {
+      if (h !== '') headerVars.push(h);
+    }
+
+    let g = await generator.next();
+    while (RemovePadding(g.value)[0] === '|') {
+      const entry = RemovePadding(g.value).replace(/\|/g, '').split(' ');
+      const entryObj : any = {};
+      let count = 0;
+      for (const v of entry) {
+        if (v !== '') {
+          entryObj[headerVars[count]] = v;
+          count++;
+        }
+      }
+      dataTable.push(entryObj);
+      g = await generator.next();
+    }
+
+    const nextLineSplit = RemovePadding(g.value).split(' ');
+    nodes[nodes.length - 1].addDynamicData('', dataTable);
+    if (g.done) {
+      return Promise.resolve(['END', 'END']);
+    } else if (headers.includes(nextLineSplit[0])) {
+      nodes.push(ParseHeaderNode(RemovePadding(g.value), nextLineSplit[0]));
+      return Promise.resolve([nextLineSplit[0], '']);
+    } else {
+      nodes.push(ParseFunctionNode(RemovePadding(g.value), nextLineSplit[0]));
+      if (![AND, BUT].includes(nextLineSplit[0])) newContext[1] = nextLineSplit[0];
+      return Promise.resolve(newContext);
+    }
+  }
+
+/**
+^ Parses DocString and adds to relevant syntax node
+*
+* @param generator the generator to grab the next lines until the closing string is parsed
+* @param node the node that is related to the Doc String
+*/
 const ParseDocString = async (generator : AsyncGenerator<string>, node: SyntaxNode) => {
   let docString = '';
   let g = await generator.next();
@@ -75,7 +134,7 @@ const ParseDocString = async (generator : AsyncGenerator<string>, node: SyntaxNo
 *
 * @param generator the generator to grab the next lines until EOF or the next header
 * @param nodes the array to insert syntax nodes
-* @returns the header that the context will be set to for the next round of parsing
+* @return the header that the context will be set to for the next round of parsing
 */
 const ParseExamplesNode = async (generator : AsyncGenerator<string>,
                                   nodes: Array<SyntaxNode>) : Promise<string> => {
@@ -267,6 +326,11 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
         break;
       case DOCSTRING:
         await ParseDocString(lines, nodes[nodes.length - 1]);
+        break;
+      case '|':
+        context = await ParseDataTable(lines, nodes, context, line);
+        if (context[0] === 'END') return Promise.resolve(nodes);
+        console.log(context);
         break;
       default:
         break;
