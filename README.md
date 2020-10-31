@@ -1,7 +1,10 @@
 # Triceratop
 ## Deno's Premiere BDD Testing Framework
+[![nest badge](https://nest.land/badge-large.svg)](https://nest.land/package/triceratop)
 
 Behavior-Driven Development (BDD) is a development methodology, similar to Test-Driven Development, where the testing scenarios are written in plain English, and act as a source of truth for testing and development. Triceratop acts as a parser and a testing framework for BDD, using the [Gherkin Language Syntax](https://cucumber.io/docs/gherkin/reference/) and Typescript to create feature files and test files.
+
+NOTE: Triceratop is minimally complete, not feature complete at the moment. See below for possible missing features.
 
 ### Installation
 ```
@@ -62,3 +65,4 @@ We love to get more help implementing improvements and features! Our suggested s
   - [ ] Implement a more CLI information and options
   - [ ] Create top-level JSON file to handle configurations
   - [ ] Move steps and features folders under a tests folder
+  - [ ] Add test coverage
