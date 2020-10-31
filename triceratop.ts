@@ -4,6 +4,7 @@
 // deno run --unstable --allow-read --allow-write triceratop.ts
 
 import { Generate } from './util/generate.ts'
+import { Tester } from './util/tester.ts'
 
 const command = Deno.args[0];
 
@@ -12,6 +13,6 @@ switch (command) {
     await Generate();
     break;
   case 'test':
-    console.log('TBD: use `deno test` instead of this?');
+    await Tester();
     break;
 }
