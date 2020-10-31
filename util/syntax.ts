@@ -330,7 +330,6 @@ export async function GenerateSyntaxList(feature_file: string): Promise<Array<Sy
       case '|':
         context = await ParseDataTable(lines, nodes, context, line);
         if (context[0] === 'END') return Promise.resolve(nodes);
-        console.log(context);
         break;
       default:
         break;

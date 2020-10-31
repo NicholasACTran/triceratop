@@ -16,8 +16,6 @@ import {
 //TODO: Pull this from yml config file?
 const FEATURE_DIRECTORY = './features';
 const STEPS_DIRECTORY = './steps';
-//TODO: Import setup module from URL
-const SETUP_MODULE = '../triceratop.setup.ts'
 
 export async function Generate() {
   // Creates feature and steps folder if they don't exist
@@ -37,9 +35,8 @@ export async function Generate() {
       const step_file_name = STEPS_DIRECTORY + file_name + '.ts';
       if (!existsSync(step_file_name)) {
         ensureFileSync(step_file_name);
-        const importText = `import "${SETUP_MODULE}"\n\n`;
         const text = await Parser(feature_file_name);
-        await Deno.writeTextFile(step_file_name, importText + text);
+        await Deno.writeTextFile(step_file_name, text);
         generationResults.push({
           identifier: step_file_name,
           status: GenerationStatus.GENERATED
