@@ -63,7 +63,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
         const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
-        while (['Given', 'And', 'But'].includes(nodes[j].type)) {
+        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
           scenarioNodes.push(nodes[j]);
           j++;
         }
@@ -74,7 +74,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
         const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
-        while (['Given', 'And', 'But'].includes(nodes[j].type)) {
+        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
           scenarioNodes.push(nodes[j]);
           j++;
         }
@@ -85,7 +85,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
         const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
-        while (['Given', 'And', 'But'].includes(nodes[j].type)) {
+        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
           scenarioNodes.push(nodes[j]);
           j++;
         }
