@@ -7,7 +7,7 @@ export async function Tester() {
   ensureDirSync(STEPS_DIRECTORY);
 
   for (const step of walkSync(STEPS_DIRECTORY)) {
-    const path = feature.path;
+    const path = step.path;
 
     //Spawns a sub-process
     const run = (path : string) : Deno.Process => {
