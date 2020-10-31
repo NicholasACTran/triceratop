@@ -18,13 +18,13 @@ const GLOBAL_OBJECT_NAME = 'Triceratop';
   }
 }
 */
-const Globalize = (name: string, fn: function, type: string) => (globalThis as any)[GLOBAL_OBJECT_NAME][type][name] = fn;
+const Globalize = (name: string, fn: Function, type: string) => (globalThis as any)[GLOBAL_OBJECT_NAME][type][name] = fn;
 
-const Given = (name: string, fn: function) => Globalize(name, fn, 'Given');
-const When = (name: string, fn: function) => Globalize(name, fn, 'When');
-const Then = (name: string, fn: function) => Globalize(name, fn, 'Then');
-const And = (name: string, fn: function) => Globalize(name, fn, 'And');
-const But = (name: string, fn: function) => Globalize(name, fn, 'But');
+const Given = (name: string, fn: Function) => Globalize(name, fn, 'Given');
+const When = (name: string, fn: Function) => Globalize(name, fn, 'When');
+const Then = (name: string, fn: Function) => Globalize(name, fn, 'Then');
+const And = (name: string, fn: Function) => Globalize(name, fn, 'And');
+const But = (name: string, fn: Function) => Globalize(name, fn, 'But');
 
 /**
 * Given an array of nodes, relating to a BDD scenario/example, create a Deno.TestDefinition
