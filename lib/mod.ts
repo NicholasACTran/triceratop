@@ -38,40 +38,43 @@ const ComposeScenario = (nodes: Array<SyntaxNode>, background: Array<SyntaxNode>
   //TODO: Finish this function
 };
 
-const TriceratopTest = async (feature: string, fn: function) => {
-  (globalThis as any)[GLOBAL_OBJECT_NAME] = {};
+const TriceratopTest = async (feature: string, fn: Function) => {
+  (globalThis as any)[GLOBAL_OBJECT_NAME] = {
+    'Given': {},
+    'When': {},
+    'Then': {},
+    'And': {},
+    'But': {}
+  };
   //Runs all the functions to globalize all the test functions
   fn();
 
-  const nodes = ParseNodes(feature);
+  const nodes = await ParseNodes(feature);
   const backgroundNodes : Array<SyntaxNode> = [];
   const scenarios : Array<Deno.TestDefinition> = [];
 
   //Iterate through the syntax nodes and create TestDefinitions for each scenario
   //TODO: Remove duplicate code
   for (let i = 0; i < nodes.length; i++) {
+    let j = i + 1;
+    const scenarioNodes = [];
     switch (nodes[i].type) {
       case 'Background:':
-        let j = i+1;
         while (['Given', 'And', 'But'].includes(nodes[j].type)) {
           backgroundNodes.push(nodes[j]);
           j++;
         }
         break;
       case 'Scenario:':
-        let j = i+1;
-        const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
-        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
+        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j]?.type)) {
           scenarioNodes.push(nodes[j]);
           j++;
         }
         scenarios.push(ComposeScenario(scenarioNodes, backgroundNodes));
         break;
       case 'Example:':
-        let j = i+1;
-        const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
         while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
@@ -81,8 +84,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
         scenarios.push(ComposeScenario(scenarioNodes, backgroundNodes));
         break;
       case 'Scenario Outline:':
-      let j = i+1;
-        const scenarioNodes = [];
+        
         //Add the header node
         scenarioNodes.push(nodes[i]);
         while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
@@ -96,7 +98,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
     }
   }
 
-  for await (scenario of scenarios) {
+  for await (let scenario of scenarios) {
     await Deno.test(scenario);
   }
   delete globalThis[GLOBAL_OBJECT_NAME];
