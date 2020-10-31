@@ -37,7 +37,7 @@ const But = (name: string, fn: Function) => Globalize(name, fn, 'But');
 const ComposeScenario = (nodes: Array<SyntaxNode>, background: Array<SyntaxNode>) : Deno.TestDefinition => {
   //TODO: Finish this function
   return {
-    name: background[0] ? `${background[0].type} ${background[0].text}`: `${nodes[0].type} ${nodes[0].text}`,
+    name: `${nodes[0].type} ${nodes[0].text}`,
     async fn() {
 
       for (let bg of background) {
@@ -103,7 +103,7 @@ const TriceratopTest = async (feature: string, fn: Function) => {
         scenarios.push(ComposeScenario(scenarioNodes, backgroundNodes));
         break;
       case 'Scenario Outline:':
-        
+
         //Add the header node
         scenarioNodes.push(nodes[i]);
         while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {

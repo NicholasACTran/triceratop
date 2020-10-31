@@ -1,12 +1,12 @@
 # Triceratop
-## Deno BDD Testing Framework
+## Deno's Premiere BDD Testing Framework
 
-### Goals
-Create a cucumber-like CLI that can be used to create and run BDD-tests using the Gherkin syntax.
+Behavior-Driven Development (BDD) is a development methodology, similar to Test-Driven Development, where the testing scenarios are written in plain English, and act as a source of truth for testing and development. Triceratop acts as a parser and a testing framework for BDD, using the [Gherkin Language Syntax](https://cucumber.io/docs/gherkin/reference/) and Typescript to create feature files and test files.
 
-* CLI command to generate testing infrastructure
-* CLI command to generate readable typescript code from a Gherkin feature document
-* CLI command to parse Gherkin feature document and run tests in steps folder
+### Installation
+```
+deno install -Afq --unstable https://raw.githubusercontent.com/NicholasACTran/triceratop/master/triceratop.ts
+```
 
 ### File Structure
 
@@ -24,35 +24,41 @@ project
 |   |   ...
 ```
 
-Where each .feature file in the features folder correlates directly with a .ts file in the steps folder with the same filename.
+Where each .feature file in the features folder correlates directly with a .ts file in the steps folder with the same filename. If there aren't feature/steps directories, triceratop will create it on the fly.
 
 ### Generating Test Code
 
 By running a triceratop CLI command, it would go through each .feature file and generate a .ts file with the same name, containing the functions that encapsulate the steps in the .feature file.
 
-Example (WIP):
+Example:
 ```bash
-deno run --unstable --allow-read --allow-write triceratop.ts generate
+triceratop generate
 ```
 
 ### Running Tests
 
 By running a triceratop CLI command, it should go through each .feature file (or a specific one) and use the .feature file to search for the specific step functions in the correlated .ts function and run a test using the underlying Deno test framework.
 
-Example (WIP):
+Example:
 ```bash
-deno test steps/*
+triceratop test
 ```
+
+### How to Contribute
+
+We love to get more help implementing improvements and features! Our suggested starting place to investigate is the top-level triceratop.ts file, and following the imports from there. Most of the testing functionality can be found in ./lib/mod.ts, while most of the parsing functionality is found in the ./util folder. See below for some possible things that need to be implemented.
 
 ### Things That Need to Be Done
 
-- [x] Implement Background, And, But nodes
-- [ ] Implement Scenario Outlines, Examples nodes
-- [x] Implement syntax list -> typescript
-- [ ] Connect functionality to underlying Deno test framework
-- [ ] Implement:
-  - [ ] Create function for Given
-  - [ ] Create function for When
-  - [ ] Create function for Then
-  - [ ] Create function for And
-  - [ ] Create function for But
+- Parsing
+  - [ ] Implement better error handling
+  - [ ] Remove dangling commas when creating typescript files
+- Testing
+  - [ ] Create TestDefinitions for functions with parameters
+  - [ ] Handle global variables
+  - [ ] Implement flag to test one file at a time
+  - [ ] Implement stubs/mocks/fakes
+- General
+  - [ ] Implement a more CLI information and options
+  - [ ] Create top-level JSON file to handle configurations
+  - [ ] Move steps and features folders under a tests folder

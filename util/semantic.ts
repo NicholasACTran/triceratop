@@ -1,7 +1,7 @@
 import { SyntaxNode } from './syntax.ts';
 
 //TODO: Import setup module from URL
-const SETUP_MODULE = '../lib/mod.ts'
+const SETUP_MODULE = 'https://raw.githubusercontent.com/NicholasACTran/triceratop/master/lib/mod.ts';
 
 export function CreateSemanticText(feature : string, nodes : Array<SyntaxNode>) : string {
   let text = `await TriceratopTest('${feature}', async () => {\n`;
