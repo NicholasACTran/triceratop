@@ -18,13 +18,13 @@ const GLOBAL_OBJECT_NAME = 'Triceratop';
   }
 }
 */
-const Globalize = (name: string, fn: function, type: string) => (globalThis as any)[GLOBAL_OBJECT_NAME][type][name] = fn;
+const Globalize = (name: string, fn: Function, type: string) => (globalThis as any)[GLOBAL_OBJECT_NAME][type][name] = fn;
 
-const Given = (name: string, fn: function) => Globalize(name, fn, 'Given');
-const When = (name: string, fn: function) => Globalize(name, fn, 'When');
-const Then = (name: string, fn: function) => Globalize(name, fn, 'Then');
-const And = (name: string, fn: function) => Globalize(name, fn, 'And');
-const But = (name: string, fn: function) => Globalize(name, fn, 'But');
+const Given = (name: string, fn: Function) => Globalize(name, fn, 'Given');
+const When = (name: string, fn: Function) => Globalize(name, fn, 'When');
+const Then = (name: string, fn: Function) => Globalize(name, fn, 'Then');
+const And = (name: string, fn: Function) => Globalize(name, fn, 'And');
+const But = (name: string, fn: Function) => Globalize(name, fn, 'But');
 
 /**
 * Given an array of nodes, relating to a BDD scenario/example, create a Deno.TestDefinition
@@ -36,42 +36,64 @@ const But = (name: string, fn: function) => Globalize(name, fn, 'But');
 */
 const ComposeScenario = (nodes: Array<SyntaxNode>, background: Array<SyntaxNode>) : Deno.TestDefinition => {
   //TODO: Finish this function
+  return {
+    name: background[0] ? `${background[0].type} ${background[0].text}`: `${nodes[0].type} ${nodes[0].text}`,
+    async fn() {
+
+      for (let bg of background) {
+        const testFn = (globalThis as any)[GLOBAL_OBJECT_NAME][bg.type];
+        if (testFn && testFn[bg.text]) {
+          await testFn[bg.text]();
+        }
+      }
+      for (let node of nodes) {
+        const testFn = (globalThis as any)[GLOBAL_OBJECT_NAME][node.type];
+        if (testFn && testFn[node.text]) {
+          await testFn[node.text]();
+        }
+      }
+
+    }
+  };
 };
 
-const TriceratopTest = async (feature: string, fn: function) => {
-  (globalThis as any)[GLOBAL_OBJECT_NAME] = {};
+const TriceratopTest = async (feature: string, fn: Function) => {
+  (globalThis as any)[GLOBAL_OBJECT_NAME] = {
+    'Given': {},
+    'When': {},
+    'Then': {},
+    'And': {},
+    'But': {}
+  };
   //Runs all the functions to globalize all the test functions
   fn();
 
-  const nodes = ParseNodes(feature);
+  const nodes = await ParseNodes(feature);
   const backgroundNodes : Array<SyntaxNode> = [];
   const scenarios : Array<Deno.TestDefinition> = [];
 
   //Iterate through the syntax nodes and create TestDefinitions for each scenario
   //TODO: Remove duplicate code
   for (let i = 0; i < nodes.length; i++) {
+    let j = i + 1;
+    const scenarioNodes = [];
     switch (nodes[i].type) {
       case 'Background:':
-        let j = i+1;
         while (['Given', 'And', 'But'].includes(nodes[j].type)) {
           backgroundNodes.push(nodes[j]);
           j++;
         }
         break;
       case 'Scenario:':
-        let j = i+1;
-        const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
-        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
+        while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j]?.type)) {
           scenarioNodes.push(nodes[j]);
           j++;
         }
         scenarios.push(ComposeScenario(scenarioNodes, backgroundNodes));
         break;
       case 'Example:':
-        let j = i+1;
-        const scenarioNodes = [];
         //Add the header node
         scenarioNodes.push(nodes[i]);
         while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
@@ -81,8 +103,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
         scenarios.push(ComposeScenario(scenarioNodes, backgroundNodes));
         break;
       case 'Scenario Outline:':
-      let j = i+1;
-        const scenarioNodes = [];
+        
         //Add the header node
         scenarioNodes.push(nodes[i]);
         while (['Given', 'When', 'Then', 'And', 'But'].includes(nodes[j].type)) {
@@ -96,7 +117,7 @@ const TriceratopTest = async (feature: string, fn: function) => {
     }
   }
 
-  for await (scenario of scenarios) {
+  for await (let scenario of scenarios) {
     await Deno.test(scenario);
   }
   delete globalThis[GLOBAL_OBJECT_NAME];
