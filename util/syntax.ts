@@ -50,8 +50,14 @@ export class SyntaxNode {
   }
 
   addDynamicData(text?:string, dataTable?:any[]) {
-    this.docString = text ? text : '';
-    this.dataTable = dataTable ? dataTable : [];
+    if (text) {
+      this.docString = text;
+      this.variables.push('docString');
+    }
+    if (dataTable) {
+      this.dataTable = dataTable;
+      this.variables.push('dataTable');
+    }
   }
 }
 
