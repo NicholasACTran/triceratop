@@ -58,11 +58,11 @@ We love to get more help implementing improvements and features! Our suggested s
   - [ ] Remove dangling commas when creating typescript files
 - Testing
   - [ ] Create TestDefinitions for functions with parameters
-  - [ ] Handle global variables
+  - [X] Handle global variables
   - [ ] Implement flag to test one file at a time
   - [ ] Implement stubs/mocks/fakes
 - General
   - [ ] Implement a more CLI information and options
-  - [ ] Create top-level JSON file to handle configurations
+  - [X] Create top-level JSON file to handle configurations
   - [ ] Move steps and features folders under a tests folder
   - [ ] Add test coverage

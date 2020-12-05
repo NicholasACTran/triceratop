@@ -1,0 +1,4 @@
+{
+  "feature-directory": "./__tests__/features",
+  "steps-directory": "./__tests__/steps"
+}

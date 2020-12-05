@@ -10,7 +10,7 @@ const command = Deno.args[0];
 
 switch (command) {
   case 'generate':
-    await Generate();
+    await Generate(Deno.args);
     break;
   case 'test':
     await Tester();

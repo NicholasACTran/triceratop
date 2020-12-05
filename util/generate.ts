@@ -13,26 +13,44 @@ import {
   GenerationStatus,
 } from './printer.ts';
 
-//TODO: Pull this from yml config file?
-const FEATURE_DIRECTORY = './features';
-const STEPS_DIRECTORY = './steps';
+//Default directories
+const FEATURE_DIRECTORY = './__tests__/features';
+const STEPS_DIRECTORY = './__tests__/steps';
 
-export async function Generate() {
+async function getConfig() {
+  if (existsSync('./triceratop.json')) {
+    //TODO: Create this json automatically
+    let data = await Deno.readFile('triceratop.json');
+    const decoder = new TextDecoder('utf-8');
+    return JSON.parse(decoder.decode(data));
+  } else {
+    return {
+      'feature-directory': FEATURE_DIRECTORY,
+      'steps-directory': STEPS_DIRECTORY
+    };
+  }
+}
+
+export async function Generate(args: Array<string>) {
+
+  const config = await getConfig();
+  const featureDirectory = config.hasOwnProperty('feature-directory') ? config['feature-directory'] : FEATURE_DIRECTORY;
+  const stepDirectory = config.hasOwnProperty('steps-directory') ? config['steps-directory'] : STEPS_DIRECTORY;
   // Creates feature and steps folder if they don't exist
-  ensureDirSync(FEATURE_DIRECTORY);
-  ensureDirSync(STEPS_DIRECTORY);
+  ensureDirSync(featureDirectory);
+  ensureDirSync(stepDirectory);
 
   const generationResults: GenerationResult[] = [];
 
   //For each .feature file in the feature folder
   //Check if a corresponding steps folder exists
-  for (const feature of walkSync(FEATURE_DIRECTORY)) {
+  for (const feature of walkSync(featureDirectory)) {
     //If not create one and write parsed feature file it
     const path = feature.path;
     if (path.endsWith('.feature')) {
       const file_name = path.substring(path.indexOf(SEP), path.lastIndexOf('.'));
-      const feature_file_name = FEATURE_DIRECTORY + file_name + '.feature';
-      const step_file_name = STEPS_DIRECTORY + file_name + '.ts';
+      const feature_file_name = featureDirectory + file_name + '.feature';
+      const step_file_name = stepDirectory + file_name + '.ts';
       if (!existsSync(step_file_name)) {
         ensureFileSync(step_file_name);
         const text = await Parser(feature_file_name);
