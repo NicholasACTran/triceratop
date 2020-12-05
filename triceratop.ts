@@ -7,10 +7,10 @@ import { Generate } from './util/generate.ts'
 import { Tester } from './util/tester.ts'
 
 const command = Deno.args[0];
-
+const args : string[] = [...Deno.args];
 switch (command) {
   case 'generate':
-    await Generate(Deno.args);
+    await Generate(args);
     break;
   case 'test':
     await Tester();

@@ -31,6 +31,12 @@ async function getConfig() {
   }
 }
 
+async function generateFeatureFiles(args: Array<string>, directory: string) {
+  for (const file_name of args) {
+    ensureFileSync(directory + SEP + file_name + '.feature');
+  }
+}
+
 export async function Generate(args: Array<string>) {
 
   const config = await getConfig();
@@ -42,13 +48,18 @@ export async function Generate(args: Array<string>) {
 
   const generationResults: GenerationResult[] = [];
 
+  if (args.length > 1) {
+    args.shift();
+    await generateFeatureFiles(args, featureDirectory);
+  }
+
   //For each .feature file in the feature folder
   //Check if a corresponding steps folder exists
   for (const feature of walkSync(featureDirectory)) {
     //If not create one and write parsed feature file it
     const path = feature.path;
     if (path.endsWith('.feature')) {
-      const file_name = path.substring(path.indexOf(SEP), path.lastIndexOf('.'));
+      const file_name = path.substring(path.lastIndexOf(SEP), path.lastIndexOf('.'));
       const feature_file_name = featureDirectory + file_name + '.feature';
       const step_file_name = stepDirectory + file_name + '.ts';
       if (!existsSync(step_file_name)) {
