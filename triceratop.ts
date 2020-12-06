@@ -13,6 +13,6 @@ switch (command) {
     await Generate(args);
     break;
   case 'test':
-    await Tester();
+    await Tester(args);
     break;
 }

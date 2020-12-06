@@ -1,7 +1,7 @@
 import { ParseNodes } from '../util/parser.ts';
 import { SyntaxNode } from '../util/syntax.ts';
 
-const GLOBAL_OBJECT_NAME = 'Triceratop';
+const GLOBAL_OBJECT_NAME : string = 'Triceratop';
 
 // Adds a function to the globalThis array
 /** The layout of the object is
@@ -120,7 +120,8 @@ const TriceratopTest = async (feature: string, fn: Function) => {
   for await (let scenario of scenarios) {
     await Deno.test(scenario);
   }
-  delete globalThis[GLOBAL_OBJECT_NAME];
+
+  delete (globalThis as any)[GLOBAL_OBJECT_NAME];
 };
 
 export { Given };

@@ -59,7 +59,7 @@ We love to get more help implementing improvements and features! Our suggested s
 - Testing
   - [ ] Create TestDefinitions for functions with parameters
   - [X] Handle global variables
-  - [ ] Implement flag to test one file at a time
+  - [X] Implement flag to test one file at a time
   - [ ] Implement stubs/mocks/fakes
 - General
   - [ ] Implement a more CLI information and options
