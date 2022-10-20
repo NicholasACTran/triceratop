@@ -20,7 +20,7 @@ const STEPS_DIRECTORY = './__tests__/steps';
 async function getConfig() {
   if (existsSync('./triceratop.json')) {
     //TODO: Create this json automatically
-    let data = await Deno.readFile('triceratop.json');
+    const data = await Deno.readFile('triceratop.json');
     const decoder = new TextDecoder('utf-8');
     return JSON.parse(decoder.decode(data));
   } else {
@@ -33,15 +33,15 @@ async function getConfig() {
 
 async function generateFeatureFiles(args: Array<string>, directory: string) {
   for (const file_name of args) {
-    ensureFileSync(directory + SEP + file_name + '.feature');
+    await ensureFileSync(directory + SEP + file_name + '.feature');
   }
 }
 
 export async function Generate(args: Array<string>) {
 
   const config = await getConfig();
-  const featureDirectory = config.hasOwnProperty('feature-directory') ? config['feature-directory'] : FEATURE_DIRECTORY;
-  const stepDirectory = config.hasOwnProperty('steps-directory') ? config['steps-directory'] : STEPS_DIRECTORY;
+  const featureDirectory = Object.prototype.hasOwnProperty.call(config, 'feature-directory') ? config['feature-directory'] : FEATURE_DIRECTORY;
+  const stepDirectory = Object.prototype.hasOwnProperty.call(config, 'steps-directory') ? config['steps-directory'] : STEPS_DIRECTORY;
   // Creates feature and steps folder if they don't exist
   ensureDirSync(featureDirectory);
   ensureDirSync(stepDirectory);

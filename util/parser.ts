@@ -6,7 +6,7 @@ import { CreateSemanticText } from './semantic.ts';
 async function getDirectory() {
   if (existsSync('./triceratop.json')) {
     //TODO: Create this json automatically
-    let data = await Deno.readFile('triceratop.json');
+    const data = await Deno.readFile('triceratop.json');
     const decoder = new TextDecoder('utf-8');
     return JSON.parse(decoder.decode(data))['feature-directory'];
   } else {

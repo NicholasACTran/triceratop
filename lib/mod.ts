@@ -1,7 +1,8 @@
+// deno-lint-ignore-file no-explicit-any ban-types
 import { ParseNodes } from '../util/parser.ts';
 import { SyntaxNode } from '../util/syntax.ts';
 
-const GLOBAL_OBJECT_NAME : string = 'Triceratop';
+const GLOBAL_OBJECT_NAME = 'Triceratop';
 
 // Adds a function to the globalThis array
 /** The layout of the object is
@@ -40,13 +41,13 @@ const ComposeScenario = (nodes: Array<SyntaxNode>, background: Array<SyntaxNode>
     name: `${nodes[0].type} ${nodes[0].text}`,
     async fn() {
 
-      for (let bg of background) {
+      for (const bg of background) {
         const testFn = (globalThis as any)[GLOBAL_OBJECT_NAME][bg.type];
         if (testFn && testFn[bg.text]) {
           await testFn[bg.text]();
         }
       }
-      for (let node of nodes) {
+      for (const node of nodes) {
         const testFn = (globalThis as any)[GLOBAL_OBJECT_NAME][node.type];
         if (testFn && testFn[node.text]) {
           await testFn[node.text]();
@@ -117,7 +118,7 @@ const TriceratopTest = async (feature: string, fn: Function) => {
     }
   }
 
-  for await (let scenario of scenarios) {
+  for await (const scenario of scenarios) {
     await Deno.test(scenario);
   }
 

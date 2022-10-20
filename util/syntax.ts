@@ -1,20 +1,22 @@
+// deno-lint-ignore-file no-explicit-any
 import { readLine } from './readline.ts';
 
-const FEATURE : string = 'Feature:';
-const SCENARIO : string = 'Scenario:';
-const EXAMPLE : string = 'Example:';
-const EXAMPLES : string = 'Examples:';
-const GIVEN : string = 'Given';
-const WHEN : string = 'When';
-const THEN : string = 'Then';
-const BACKGROUND : string = 'Background:';
-const AND : string = 'And';
-const BUT : string = 'But';
-const SCENARIO_OUTLINE_1 : string = 'Scenario';
-const SCENARIO_OUTLINE_2 : string = 'Outline';
-const SCENARIO_OUTLINE : string = 'Scenario Outline:';
-const RULE : string = 'Rule:';
-const DOCSTRING : string = '"""';
+const FEATURE = 'Feature:';
+const SCENARIO = 'Scenario:';
+const EXAMPLE = 'Example:';
+const EXAMPLES = 'Examples:';
+const GIVEN = 'Given';
+const WHEN = 'When';
+const THEN = 'Then';
+const BACKGROUND = 'Background:';
+const AND = 'And';
+const BUT = 'But';
+const SCENARIO_OUTLINE_1 = 'Scenario';
+// deno-lint-ignore no-unused-vars
+const SCENARIO_OUTLINE_2 = 'Outline';
+const SCENARIO_OUTLINE = 'Scenario Outline:';
+const RULE = 'Rule:';
+const DOCSTRING = '"""';
 
 const headers = [
   FEATURE,
@@ -148,7 +150,7 @@ const ParseExamplesNode = async (generator : AsyncGenerator<string>,
   const variables : Array<string> = [];
 
   let g = await generator.next();
-  let header = RemovePadding(g.value).replace(/\|/g, '').split(' ');
+  const header = RemovePadding(g.value).replace(/\|/g, '').split(' ');
   for (const h of header) {
     if (h !== '') variables.push(h);
   }
@@ -157,10 +159,10 @@ const ParseExamplesNode = async (generator : AsyncGenerator<string>,
     g = await generator.next();
     if (g.done) break;
 
-    let line = RemovePadding(g.value);
+    const line = RemovePadding(g.value);
     if (line[0] !== '|') {
       const type = line.split(' ')[0];
-      if (line.length === 0) {}
+      if (line.length === 0) { continue; }
       else if (headers.includes(type)) {
         nodes.push(new SyntaxNode(EXAMPLES, '', [], examples));
         nodes.push(ParseHeaderNode(line, type));
